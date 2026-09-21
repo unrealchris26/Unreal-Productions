@@ -1,0 +1,162 @@
+/* ==========================================================================
+   Self-hosted display faces
+   --------------------------------------------------------------------------
+   One per show, used only for that show's title. `swap` so a slow font
+   never blocks the title from painting.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Enigma";
+  src: url("../assets/fonts/enigma.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Benguiat Condensed";
+  src: url("../assets/fonts/benguiat-bold-condensed.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cloudsters";
+  src: url("../assets/fonts/cloudsters.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   UNREAL PRODUCTIONS — Design tokens
+   Every colour, font, space and timing value used by the site is defined
+   here. Change a value once and it updates everywhere.
+   ========================================================================== */
+
+:root {
+  /* ---- Brand palette ---------------------------------------------------
+     Sampled from the reference screenshot. */
+  --c-black:        #000000;
+  --c-ink:          #08080a;  /* page background                            */
+  --c-ink-2:        #0e0e11;  /* raised surface (cards, footer)             */
+  --c-ink-3:        #16161a;  /* hover surface                              */
+
+  --c-gold:         #c9a961;  /* primary accent — buttons, rules, details   */
+  --c-gold-bright:  #e3c887;  /* hover / highlight                          */
+  --c-gold-dim:     #8a7440;  /* borders at rest                            */
+  /* --c-red is 3.95:1 — LARGE TEXT ONLY (>=24px, or >=19px bold).
+     For red body copy use --c-red-bright (5.66:1). */
+  --c-red:          #d32b2b;  /* logo + Psychic Vampire accent              */
+  --c-red-bright:   #ff3b3b;  /* red on dark at body size —  5.66:1  AA     */
+
+  --c-white:        #ffffff;
+  /* Contrast ratios below are measured against --c-ink (#08080a). */
+  --c-text:         #e8e6e3;  /* body copy      — 16.06:1  AA + AAA         */
+  --c-text-dim:     #a8a49e;  /* secondary copy —  8.07:1  AA + AAA         */
+  --c-text-faint:   #837f79;  /* meta/captions  —  5.03:1  AA               */
+
+  /* ---- Per-show tints ---------------------------------------------------
+     Each feature section gets its own wash, matching the reference. */
+  --tint-ghost:     216 30% 12%;   /* blue-grey   */
+  --tint-vampire:   258 32% 11%;   /* purple/teal */
+  --tint-magic:     162 26% 9%;    /* green       */
+  --tint-mind:      276 30% 11%;   /* violet/neon */
+  --tint-duo:       32  45% 12%;   /* amber       */
+
+  /* ---- Type ------------------------------------------------------------- */
+  --f-display: "Oswald", "Arial Narrow", sans-serif;      /* show titles     */
+  --f-serif:   "Playfair Display", Georgia, serif;        /* ornate titles   */
+  --f-body:    "Barlow", -apple-system, "Segoe UI", sans-serif;
+
+  /* Per-show display faces. Each falls back to a stock face of similar
+     proportion so the layout holds if the file ever fails to load. */
+  --f-ghost:   "Enigma", "Oswald", "Arial Narrow", sans-serif;
+  --f-vampire: "Benguiat Condensed", "Playfair Display", Georgia, serif;
+  --f-mind:    "Cloudsters", "Oswald", "Arial Narrow", sans-serif;
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.875rem;
+  --fs-base: 1rem;
+  --fs-md:   1.125rem;
+  /* Fluid display sizes: min at 375px, max at 1920px */
+  --fs-lg:   clamp(1.25rem, 0.9rem + 1.5vw,  1.75rem);
+  --fs-xl:   clamp(1.75rem, 1.2rem + 2.4vw,  3rem);
+  --fs-2xl:  clamp(2.25rem, 1.3rem + 4.2vw,  4.5rem);
+  --fs-3xl:  clamp(2.75rem, 1.4rem + 6vw,    6.5rem);
+
+  --lh-tight: 1.05;
+  --lh-snug:  1.25;
+  --lh-body:  1.65;
+
+  --ls-wide:   0.08em;
+  --ls-wider:  0.16em;
+  --ls-widest: 0.3em;
+
+  /* ---- Space ------------------------------------------------------------ */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  --section-y: clamp(3.5rem, 7vw, 7rem);   /* vertical section rhythm       */
+  --gutter:    clamp(1rem, 4vw, 3rem);     /* page side padding             */
+  --maxw:      1280px;                     /* main content container        */
+  --maxw-prose: 68ch;                      /* legal / long-form text column */
+
+  /* ---- Shape & depth ---------------------------------------------------- */
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-pill: 999px;
+
+  --shadow-card:  0 18px 40px -12px rgb(0 0 0 / 0.85);
+  --shadow-lift:  0 28px 60px -14px rgb(0 0 0 / 0.9);
+  --glow-gold:    0 0 0 1px var(--c-gold), 0 0 28px -4px rgb(201 169 97 / 0.55);
+  /* Inset variant for elements inside an overflow:hidden box, where an
+     outset ring would be clipped and leave corner artifacts.
+     Reserved for FOCUS, where a visible ring is required. */
+  --glow-gold-inset: inset 0 0 0 1px var(--c-gold), 0 0 28px -4px rgb(201 169 97 / 0.55);
+  /* Hover/touch lift: warmth with no hairline border. */
+  --glow-soft:    0 0 34px -6px rgb(201 169 97 / 0.45);
+  /* Show-card border: a 1px gold rule INSET from the card's edge, leaving a
+     margin of image visible outside it. Inset tracks the reference art,
+     which sits ~3.3% of the card width in from each edge. */
+  --card-rule:        rgb(201 169 97 / 0.55);
+  --card-rule-hover:  rgb(201 169 97 / 0.85);
+  --card-rule-inset:  clamp(0.5rem, 0.28rem + 0.62vw, 0.8rem);
+
+  /* ---- Motion -----------------------------------------------------------
+     Theatrical: slow, weighted, never bouncy.
+     UI feedback stays under 300ms; only decorative/marketing motion
+     (scroll reveals, smoke, spotlight) runs longer. */
+  --d-press:  140ms;   /* button press feedback            */
+  --d-fast:   180ms;   /* hover / colour change            */
+  --d-base:   240ms;   /* dropdowns, small state changes   */
+  --d-modal:  280ms;   /* lightbox in/out                  */
+  --d-slow:   600ms;   /* shimmer sweep (decorative)       */
+  --d-reveal: 900ms;   /* scroll reveal (marketing)        */
+
+  /* Standard curves. Do not hand-roll replacements. */
+  --e-out:    cubic-bezier(0.23, 1, 0.32, 1);      /* entrances, exits, reveals */
+  --e-in-out: cubic-bezier(0.77, 0, 0.175, 1);     /* on-screen movement        */
+  --e-soft:   ease;                                /* hover / colour            */
+  --e-linear: linear;                              /* constant motion           */
+
+  /* ---- Layering --------------------------------------------------------- */
+  --z-base:    1;
+  --z-sticky:  100;
+  --z-nav:     200;
+  --z-modal:   1000;
+}
+
+/* The site is dark-only by design (a theatrical brand). We declare the
+   scheme so form controls, scrollbars and focus rings render dark natively
+   rather than defaulting to a light UA theme. */
+:root { color-scheme: dark; }

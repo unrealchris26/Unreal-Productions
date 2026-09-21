@@ -1,0 +1,40 @@
+# Environment — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# Netlify
+.netlify/
+
+# Dependencies
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Original unoptimised source assets.
+# Leading slash anchors this to the repo ROOT. Without it, Git on a
+# case-insensitive filesystem also matches assets/images/ and silently
+# excludes every optimised image the site actually loads.
+# Remove this line if you want the originals tracked in the repo.
+/Images/
+
+# Full-page reference screenshots (~40MB of source material, not deliverables).
+# Delete these lines if you want them tracked in the repo.
+unrealproductions website reference.png
+unrealproductions website reference copy.png
+unrealproductions.co.png
+
+# Loose working files kept at the project root. The fonts are duplicated
+# into assets/fonts/ and the screenshots are design references, not site
+# assets — none of them belong in the deployed site.
+/BenguiatITCbyBT-BoldCondensed.woff2
+/cloudsters-cloudsters-400.woff2
+/enigma.enigma.woff2
+/Screenshot *.jpg
+/Kent Axell *.jpg

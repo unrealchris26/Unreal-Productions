@@ -1,0 +1,457 @@
+/* ==========================================================================
+   Motion layer
+   --------------------------------------------------------------------------
+   Rules this file follows:
+   - transform / opacity / filter only. Never width, height, top or left.
+   - Entrances and exits use --e-out. Nothing uses ease-in.
+   - Hover motion is gated behind (hover: hover) and (pointer: fine) so a
+     tap on a touch screen cannot strand an element mid-animation.
+   - Decorative motion (smoke, flicker, parallax, spotlight) is removed
+     entirely under prefers-reduced-motion. Motion that carries meaning
+     (reveals, modal) degrades to a plain opacity fade instead of vanishing.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Scroll reveal
+   Elements start hidden and are revealed by IntersectionObserver adding
+   .is-visible. The no-js / observer-unsupported fallback is at the bottom
+   of this file: without .js-reveal on <html> nothing is ever hidden.
+   ========================================================================== */
+
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    opacity   var(--d-reveal) var(--e-out),
+    transform var(--d-reveal) var(--e-out);
+  /* Staggered children set --reveal-i; default to no delay. */
+  transition-delay: calc(var(--reveal-i, 0) * 70ms);
+  will-change: opacity, transform;
+}
+
+.js-reveal [data-reveal="left"]  { transform: translate3d(-36px, 0, 0); }
+.js-reveal [data-reveal="right"] { transform: translate3d(36px, 0, 0); }
+.js-reveal [data-reveal="scale"] { transform: translate3d(0, 20px, 0) scale(0.96); }
+
+.js-reveal [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Once revealed, drop the compositor hint so long pages don't hold layers. */
+.js-reveal [data-reveal].reveal-done { will-change: auto; }
+
+/* ==========================================================================
+   2. Hero — logo flicker, tagline, smoke
+   ========================================================================== */
+
+/* The logo strikes like a stage lamp finding power: a few fast stutters,
+   then it holds. Runs once, on load. Keyframes (not a transition) because
+   it is a fixed, non-interruptible sequence. */
+@keyframes logo-strike {
+  0%   { opacity: 0;    filter: brightness(0.2); }
+  8%   { opacity: 0.85; filter: brightness(2.6); }
+  11%  { opacity: 0.15; filter: brightness(0.4); }
+  16%  { opacity: 0.95; filter: brightness(2.2); }
+  20%  { opacity: 0.25; filter: brightness(0.5); }
+  27%  { opacity: 1;    filter: brightness(1.8); }
+  32%  { opacity: 0.6;  filter: brightness(0.9); }
+  40%  { opacity: 1;    filter: brightness(1.35); }
+  100% { opacity: 1;    filter: brightness(1); }
+}
+
+.hero__logo {
+  animation: logo-strike 2.2s var(--e-out) both;
+}
+
+/* A soft red bloom behind the mark that settles as the flicker resolves. */
+@keyframes logo-bloom {
+  0%, 26% { opacity: 0; }
+  40%     { opacity: 0.85; }
+  100%    { opacity: 0.4; }
+}
+
+.hero__logo-glow {
+  animation: logo-bloom 2.6s var(--e-out) both;
+}
+
+/* Tagline and subline rise after the logo has settled. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hero__tagline { animation: rise-in 900ms var(--e-out) 1.5s both; }
+.hero__subline { animation: rise-in 900ms var(--e-out) 1.8s both; }
+.hero__media   { animation: rise-in 1s    var(--e-out) 2s   both; }
+.hero__cta     { animation: rise-in 900ms var(--e-out) 2.3s both; }
+
+/* ---- Smoke ---------------------------------------------------------------
+   Two large, very low-opacity radial blobs drifting on independent cycles.
+   Pure CSS — cheaper and smoother than a canvas particle system, and it
+   keeps running off the main thread while the page is still loading. */
+@keyframes smoke-drift-a {
+  0%   { transform: translate3d(-8%, 4%, 0) scale(1);    opacity: 0.5; }
+  50%  { transform: translate3d(6%, -3%, 0) scale(1.18); opacity: 0.75; }
+  100% { transform: translate3d(-8%, 4%, 0) scale(1);    opacity: 0.5; }
+}
+@keyframes smoke-drift-b {
+  0%   { transform: translate3d(5%, -2%, 0) scale(1.1);  opacity: 0.4; }
+  50%  { transform: translate3d(-7%, 5%, 0) scale(0.95); opacity: 0.65; }
+  100% { transform: translate3d(5%, -2%, 0) scale(1.1);  opacity: 0.4; }
+}
+
+.smoke {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.smoke__layer {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  will-change: transform, opacity;
+}
+
+.smoke__layer--1 {
+  top: -10%; left: -5%;
+  background: radial-gradient(circle, rgb(120 130 160 / 0.20), transparent 68%);
+  animation: smoke-drift-a 26s var(--e-linear) infinite;
+}
+.smoke__layer--2 {
+  bottom: -15%; right: -8%;
+  background: radial-gradient(circle, rgb(170 60 60 / 0.16), transparent 68%);
+  animation: smoke-drift-b 34s var(--e-linear) infinite;
+}
+.smoke__layer--3 {
+  top: 25%; left: 40%;
+  width: 45%;
+  background: radial-gradient(circle, rgb(201 169 97 / 0.10), transparent 70%);
+  animation: smoke-drift-a 44s var(--e-linear) infinite reverse;
+}
+
+/* ==========================================================================
+   3. Show cards — lift, gold glow, image zoom
+   Hover tier: seen often, so the motion is small and fast (180ms).
+   ========================================================================== */
+
+.show-card {
+  transition:
+    transform  var(--d-base) var(--e-out),
+    box-shadow var(--d-base) var(--e-out);
+}
+
+.show-card__img {
+  transition: transform var(--d-slow) var(--e-out),
+              filter    var(--d-base) var(--e-soft);
+}
+
+.show-card__frame {
+  transition: border-color var(--d-base) var(--e-soft),
+              box-shadow   var(--d-base) var(--e-soft);
+}
+
+/* The sheen crosses the artwork while the image zooms. Transition, not
+   keyframes, so moving the pointer on and off retargets rather than
+   restarting mid-sweep. */
+.show-card__shine {
+  transition:
+    transform var(--d-slow) var(--e-out),
+    opacity   var(--d-fast) var(--e-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .show-card:hover {
+    transform: translate3d(0, -8px, 0);
+    box-shadow: var(--shadow-lift), var(--glow-soft);
+  }
+  .show-card:hover .show-card__img {
+    transform: scale(1.08);
+    filter: brightness(1.12);
+  }
+  .show-card:hover .show-card__frame {
+    border-color: var(--card-rule-hover);
+  }
+  .show-card:hover .show-card__shine {
+    opacity: 1;
+    transform: translate3d(240%, 0, 0) rotate(16deg);
+  }
+}
+
+/* Touch: main.js adds .is-touched on tap so the same zoom + sheen plays
+   where there is no hover to trigger it. */
+.show-card.is-touched { transform: translate3d(0, -8px, 0); box-shadow: var(--shadow-lift), var(--glow-soft); }
+.show-card.is-touched .show-card__img { transform: scale(1.08); filter: brightness(1.12); }
+.show-card.is-touched .show-card__frame { border-color: var(--card-rule-hover); }
+.show-card.is-touched .show-card__shine {
+  opacity: 1;
+  transform: translate3d(240%, 0, 0) rotate(16deg);
+}
+
+/* Keyboard parity — focusing the card's link produces the same state. */
+.show-card:focus-within {
+  transform: translate3d(0, -8px, 0);
+  box-shadow: var(--shadow-lift);
+}
+/* Keyboard focus gets a full-strength rule plus a glow — that one is an
+   accessibility affordance, not decoration. */
+.show-card:focus-within .show-card__frame {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 22px -6px rgb(201 169 97 / 0.75);
+}
+.show-card:focus-within .show-card__img { transform: scale(1.08); }
+.show-card:focus-within .show-card__shine {
+  opacity: 1;
+  transform: translate3d(240%, 0, 0) rotate(16deg);
+}
+
+/* ==========================================================================
+   4. Play button — slow pulsing ring
+   ========================================================================== */
+
+@keyframes ring-pulse {
+  0%   { transform: scale(1);    opacity: 0.85; }
+  70%  { transform: scale(1.45); opacity: 0; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+.play-btn__ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  animation: ring-pulse 2.8s var(--e-out) infinite;
+  pointer-events: none;
+}
+/* Second ring, offset half a cycle, so the pulse never fully empties. */
+.play-btn__ring--delay { animation-delay: 1.4s; }
+
+.play-btn {
+  transition:
+    transform  var(--d-base) var(--e-out),
+    background-color var(--d-fast) var(--e-soft),
+    color      var(--d-fast) var(--e-soft);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .play-btn:hover { transform: scale(1.08); }
+}
+.play-btn:focus-visible { transform: scale(1.08); }
+.play-btn:active { transform: scale(0.98); }
+
+/* ==========================================================================
+   5. Hidden Chamber — spotlight sweep
+   A narrow bright band crossing the logo, as if a followspot passed over it.
+   ========================================================================== */
+
+@keyframes spotlight-sweep {
+  0%        { transform: translate3d(-160%, 0, 0) rotate(14deg); }
+  55%, 100% { transform: translate3d(160%, 0, 0)  rotate(14deg); }
+}
+
+/* The logo is a transparent PNG, so a plain overlay reads as a lit SQUARE
+   around the artwork. This container is masked by the logo's own alpha
+   channel, which confines the sweep to the painted pixels. The mask stays
+   still; only the band inside it moves. */
+.chamber__shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
+
+  -webkit-mask-image: url("../assets/images/hidden-chamber-logo.png");
+          mask-image: url("../assets/images/hidden-chamber-logo.png");
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+}
+
+.chamber__shine-band {
+  position: absolute;
+  top: -40%;
+  left: 0;
+  width: 46%;
+  height: 180%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgb(255 246 220 / 0.08) 28%,
+    rgb(255 246 220 / 0.38) 48%,
+    rgb(255 246 220 / 0.50) 50%,
+    rgb(255 246 220 / 0.38) 52%,
+    rgb(255 246 220 / 0.08) 72%,
+    transparent 100%);
+  filter: blur(18px);
+  animation: spotlight-sweep 7s var(--e-in-out) infinite;
+}
+
+/* ==========================================================================
+   6. Team cards — grayscale to colour
+   ========================================================================== */
+
+.team-card__img {
+  filter: grayscale(1) contrast(1.05);
+  transition: filter    var(--d-slow) var(--e-soft),
+              transform var(--d-slow) var(--e-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .team-card:hover .team-card__img,
+  .team-card:focus-within .team-card__img {
+    filter: grayscale(0) contrast(1);
+    transform: scale(1.04);
+  }
+}
+
+/* Touch devices get colour by default — there is no hover to reveal it. */
+@media (hover: none) {
+  .team-card__img { filter: grayscale(0); }
+}
+
+/* ==========================================================================
+   7. Parallax
+   JS writes --parallax-y (in px) on the layer. Transform only, so it never
+   triggers layout. No transition: the value updates every rAF tick and a
+   transition would add lag against the scroll position.
+   ========================================================================== */
+
+.parallax {
+  transform: translate3d(0, var(--parallax-y, 0), 0);
+  will-change: transform;
+}
+
+/* ==========================================================================
+   8. Lightbox
+   Transitions (not keyframes) so a rapid open/close retargets from the
+   current value instead of restarting.
+   ========================================================================== */
+
+.lightbox {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--d-modal) var(--e-out),
+    visibility 0s linear var(--d-modal);
+}
+.lightbox.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity    var(--d-modal) var(--e-out),
+    visibility 0s;
+}
+
+.lightbox__panel {
+  transform: translate3d(0, 12px, 0) scale(0.97);
+  transition: transform var(--d-modal) var(--e-out);
+}
+.lightbox.is-open .lightbox__panel { transform: none; }
+
+/* ==========================================================================
+   9. Header
+   ========================================================================== */
+
+.site-header {
+  transition:
+    background-color var(--d-base) var(--e-soft),
+    border-color     var(--d-base) var(--e-soft),
+    backdrop-filter  var(--d-base) var(--e-soft);
+}
+
+.nav-toggle__bar {
+  transition: transform var(--d-base) var(--e-out),
+              opacity   var(--d-fast) var(--e-soft);
+}
+
+/* ==========================================================================
+   10. Reduced motion
+   Decorative motion is removed. Meaningful motion degrades to a fade so
+   content still announces itself without travelling.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  /* Reveals: fade only, no translation, no stagger. */
+  .js-reveal [data-reveal],
+  .js-reveal [data-reveal="left"],
+  .js-reveal [data-reveal="right"],
+  .js-reveal [data-reveal="scale"] {
+    transform: none;
+    transition: opacity var(--d-base) var(--e-out);
+    transition-delay: 0s;
+  }
+
+  /* Hero: appear, do not perform. */
+  .hero__logo,
+  .hero__logo-glow,
+  .hero__tagline,
+  .hero__subline,
+  .hero__media,
+  .hero__cta {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  /* Purely decorative loops are switched off outright. */
+  .smoke,
+  .chamber__shine-band,
+  .play-btn__ring {
+    animation: none;
+  }
+  .smoke,
+  .chamber__shine { display: none; }
+  .play-btn__ring { opacity: 0.4; transform: none; }
+
+  /* The show row has no auto-motion to disable; it only ever moves when
+     the user drags or swipes it. */
+
+  /* The sheen is a moving highlight with no informational value. */
+  .show-card__shine { display: none; }
+
+  /* No travel on hover or parallax. */
+  .show-card:hover,
+  .show-card:focus-within,
+  .show-card.is-touched { transform: none; }
+  .show-card:hover .show-card__img,
+  .show-card:focus-within .show-card__img,
+  .show-card.is-touched .show-card__img { transform: none; }
+  .team-card:hover .team-card__img,
+  .team-card:focus-within .team-card__img { transform: none; }
+  .play-btn:hover,
+  .play-btn:focus-visible,
+  .play-btn:active { transform: none; }
+  .parallax { transform: none; }
+
+  .lightbox__panel { transform: none; }
+
+  /* The shimmer is a moving highlight with no informational value. */
+  .btn::after { display: none; }
+
+  /* Deliberately NO blanket `* { transition-duration: 0.01ms !important }`
+     here. That sledgehammer would also flatten the considered opacity
+     fades above, and reduced motion means gentler motion, not none.
+     Colour, opacity and border transitions are safe and are left alone;
+     every transform-based animation on the site is enumerated above. */
+}
+
+/* ==========================================================================
+   11. No-JS fallback
+   .js-reveal is set on <html> by JS. Without it, every [data-reveal] stays
+   at its natural opacity, so the page is fully readable with JS disabled.
+   ========================================================================== */
+
+html:not(.js-reveal) [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
