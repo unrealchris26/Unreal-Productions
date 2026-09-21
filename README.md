@@ -4,7 +4,9 @@ Static, framework-free site (semantic HTML + CSS + vanilla JS) for **Unreal Prod
 built to pass **A2P 10DLC** carrier review for SMS campaign registration.
 
 - **3 pages** — `index.html`, `privacy-policy.html`, `terms.html`
-- **1 serverless function** — `netlify/functions/lead.mjs` (booking form → GoHighLevel)
+- **1 serverless function** — booking form → GoHighLevel. Deploys to **Vercel or Netlify**:
+  shared logic in `lib/lead-core.mjs`, thin adapters in `api/lead.mjs` (Vercel) and
+  `netlify/functions/lead.mjs` (Netlify). Both serve `POST /api/lead`.
 - **No build step.** No dependencies. No bundler. Open the folder and it runs.
 
 ---
@@ -54,7 +56,34 @@ validate correctly and then report a submission error, which is expected.
 
 ---
 
-## 2. Deploying to Netlify
+## 2. Deploying
+
+The site runs on either host. The browser always posts to **`/api/lead`**: on Vercel
+that path is served by `api/lead.mjs`, and on Netlify the function declares
+`path = "/api/lead"`. Nothing in the client is platform-specific.
+
+| | Vercel | Netlify |
+|---|---|---|
+| Config file | `vercel.json` | `netlify.toml` |
+| Function | `api/lead.mjs` | `netlify/functions/lead.mjs` |
+| Shared logic | `lib/lead-core.mjs` | same |
+| Env vars | Project → Settings → Environment Variables | Site settings → Environment variables |
+
+**Each host ignores the other's config file**, so the headers, caching and redirects
+are defined twice and must be kept in step if you change one.
+
+### Vercel
+
+1. Import the GitHub repo. It is a static site with functions — no build command,
+   no output directory, no framework preset.
+2. Add `GHL_TOKEN` and `GHL_LOCATION_ID` under Environment Variables.
+3. **Redeploy.** Functions only pick up env changes on a new build.
+
+`vercel.json` sets the security headers (CSP, X-Frame-Options, Referrer-Policy,
+Permissions-Policy), asset caching, `cleanUrls`, and the `/privacy` + `/terms`
+redirects.
+
+## 2b. Deploying to Netlify
 
 1. **Push to GitHub.**
 

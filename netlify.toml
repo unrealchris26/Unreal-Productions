@@ -57,3 +57,12 @@
   from = "/terms"
   to = "/terms.html"
   status = 301
+
+# The function itself declares `path = "/api/lead"`, so the browser uses the
+# same endpoint on Netlify and Vercel. This keeps the historical path working
+# for any client that cached it.
+[[redirects]]
+  from = "/.netlify/functions/lead"
+  to = "/api/lead"
+  status = 308
+  force = true

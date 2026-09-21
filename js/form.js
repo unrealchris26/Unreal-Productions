@@ -7,7 +7,10 @@
    show what the user actually chose, including "no".
    ========================================================================== */
 
-const ENDPOINT = "/.netlify/functions/lead";
+/* Same path on both platforms: on Vercel it is served by api/lead.mjs, and
+   on Netlify the function declares `path: "/api/lead"` rather than sitting
+   under /.netlify/functions/. Nothing here is platform-specific. */
+const ENDPOINT = "/api/lead";
 
 /* Deliberately permissive. Client-side validation is a convenience, not a
    gate — the function re-validates. Rejecting unusual but valid addresses
