@@ -72,6 +72,15 @@ that path is served by `api/lead.mjs`, and on Netlify the function declares
 **Each host ignores the other's config file**, so the headers, caching and redirects
 are defined twice and must be kept in step if you change one.
 
+> `vercel.json` cannot carry comments. JSON has no comment syntax, and Vercel
+> validates the file against a strict schema that **rejects any unrecognised
+> top-level key** — including a `"comment"` field — with
+> `Invalid request: should NOT have additional property`. Only these keys are
+> accepted: `$schema`, `buildCommand`, `cleanUrls`, `crons`, `devCommand`,
+> `framework`, `functions`, `git`, `headers`, `ignoreCommand`, `images`,
+> `installCommand`, `outputDirectory`, `public`, `redirects`, `regions`,
+> `rewrites`, `routes`, `trailingSlash`. Put explanatory notes here instead.
+
 ### Vercel
 
 1. Import the GitHub repo. It is a static site with functions — no build command,

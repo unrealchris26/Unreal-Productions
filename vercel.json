@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "comment": "Mirrors netlify.toml so the site behaves the same on either host. Vercel ignores netlify.toml entirely.",
-  "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
     {
@@ -43,8 +41,8 @@
     }
   ],
   "redirects": [
-    { "source": "/privacy", "destination": "/privacy-policy", "permanent": true },
-    { "source": "/privacy-policy.html", "destination": "/privacy-policy", "permanent": true },
-    { "source": "/terms.html", "destination": "/terms", "permanent": true }
+    { "source": "/privacy", "destination": "/privacy-policy.html", "permanent": true },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html", "permanent": true },
+    { "source": "/terms", "destination": "/terms.html", "permanent": true }
   ]
 }
