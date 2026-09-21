@@ -683,12 +683,14 @@
   .show-marquee {
     overflow-x: auto;
     scroll-snap-type: x proximity;
-    scroll-padding-inline: var(--gutter);
   }
+  /* No padding-inline here. A gutter on a scroll track becomes a dead strip
+     of background at whichever end the row is resting against — 16px on the
+     left at the start, 16px on the right once swiped to the end. The cards
+     run edge to edge instead, matching the desktop grid. */
   .show-marquee__track {
     display: flex;
     width: max-content;
-    padding-inline: var(--gutter);
   }
   .show-card {
     flex: 0 0 auto;
