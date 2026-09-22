@@ -11,6 +11,20 @@ html {
   scroll-behavior: smooth;
   /* Offset in-page anchors so the sticky header never covers a heading. */
   scroll-padding-top: 6rem;
+
+  /* Horizontal overflow is clipped HERE, on the root, not only on <body>.
+     Overflow set on <body> only reaches the viewport by propagation, and
+     Chrome on Android does not propagate `clip` the way it propagates
+     `hidden` — so a body-only rule leaves the real viewport unclipped and
+     any stray overflow becomes a horizontal scroll on a phone while looking
+     fine in desktop emulation.
+
+     `clip` rather than `hidden` on purpose: `hidden` would turn the root
+     into a scroll container and break `position: sticky` on the header. */
+  overflow-x: clip;
+  /* Stop horizontal rubber-banding revealing empty space past the edge. */
+  overscroll-behavior-x: none;
+  max-width: 100%;
 }
 
 body {
@@ -21,7 +35,12 @@ body {
   line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Second barrier. The root rule above is the one that actually governs the
+     viewport; this contains anything that escapes a descendant. */
   overflow-x: clip;
+  overscroll-behavior-x: none;
+  width: 100%;
+  max-width: 100%;
 }
 
 img, picture, svg, video {
