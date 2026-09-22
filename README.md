@@ -246,19 +246,41 @@ re-optimise before committing.
 
 ### Videos
 
-Play buttons currently carry `data-video="TODO_YOUTUBE_ID"` and open a styled
-*"Video coming soon"* panel rather than a broken embed. To wire one up, put the YouTube ID
-(the part after `v=`) in the attribute:
+Four showreels are self-hosted in `assets/video/` and play in the lightbox as
+`<video>` elements — no YouTube, no third-party tracking:
+
+| Show | File | Size |
+|---|---|---|
+| Ghost Stories | `ghost-stories.webm` | 1.1 MB |
+| The Psychic Vampire | `psychic-vampire.webm` | 3.5 MB |
+| The Magic Show | `magic-show.webm` | 3.4 MB |
+| The Mindreader | `mindreader.mp4` | 5.3 MB |
+
+Each play button carries:
 
 ```html
-<button class="play-btn" data-video="dQw4w9WgXcQ" data-video-title="Ghost Stories — trailer">
+<button class="play-btn" type="button"
+        data-video-src="assets/video/ghost-stories.webm"
+        data-video-poster="assets/images/ghost-stories-card.jpg"
+        data-video-title="Ghost Stories — showreel">
 ```
 
-There are **5** of them: hero, Ghost Stories, Psychic Vampire, Magic Show and Mindreader.
-Embeds use `youtube-nocookie.com` and are torn down on close so audio stops.
+The lightbox resolves three cases in priority order:
 
-For self-hosted video instead, drop files in `assets/video/` and swap the `<iframe>` for a
-`<video>` in `initLightbox()` in `js/main.js`.
+1. `data-video-src` — a self-hosted file, played in a `<video>` with controls.
+2. `data-video` — a YouTube ID, embedded via `youtube-nocookie.com`.
+3. Neither (or a `TODO` id) — a styled "coming soon" panel, never a broken embed.
+
+The hero show reel is still case 3; give it either attribute to wire it up.
+
+Notes:
+- Autoplay with sound is blocked by most browsers. The player tries unmuted,
+  then retries muted so the reel still starts; the user can unmute via controls.
+- The element is destroyed on close, so audio always stops.
+- `media-src 'self'` is set in the CSP in **both** `vercel.json` and
+  `netlify.toml`. Without it the browser blocks self-hosted video.
+- WebM needs Safari 14.1+ / iOS 15+. If you need to support older Safari,
+  supply MP4/H.264 versions and add them as extra `<source>` entries.
 
 ### Copy
 

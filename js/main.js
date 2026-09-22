@@ -201,21 +201,43 @@ function initLightbox() {
 
   let lastFocused = null;
 
-  const open = (videoId, label) => {
+  /**
+   * Three sources, in priority order:
+   *   data-video-src  a self-hosted file  -> <video>
+   *   data-video      a YouTube ID        -> privacy-mode iframe
+   *   neither / TODO  -> a styled placeholder, never a broken embed
+   */
+  const open = ({ src, poster, videoId, label }) => {
     lastFocused = document.activeElement;
 
     if (title && label) title.textContent = label;
 
-    // Placeholder IDs must not produce a broken embed.
-    if (!videoId || videoId.startsWith("TODO")) {
-      mount.innerHTML = `
-        <div style="display:grid;place-items:center;height:100%;padding:2rem;text-align:center;color:var(--c-text-dim)">
-          <div>
-            <p style="color:var(--c-gold);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Video coming soon</p>
-            <p>TODO: add a YouTube video ID to this play button&rsquo;s <code>data-video</code> attribute.</p>
-          </div>
-        </div>`;
-    } else {
+    if (src) {
+      const video = document.createElement("video");
+      video.src = src;
+      if (poster) video.poster = poster;
+      video.controls = true;
+      video.autoplay = true;
+      video.playsInline = true;          // iOS: play inline, not fullscreen
+      video.preload = "metadata";
+      video.setAttribute("aria-label", label || "Video player");
+      // A browser that cannot decode the file must say so rather than
+      // showing an inert black rectangle.
+      video.addEventListener("error", () => {
+        mount.innerHTML = `
+          <div class="lightbox__notice">
+            <p class="lightbox__notice-title">Video unavailable</p>
+            <p>This browser could not play the video. Please try another browser.</p>
+          </div>`;
+      });
+      mount.replaceChildren(video);
+      // Autoplay with sound is blocked by default; start muted if refused so
+      // the reel still plays, and let the user unmute via the controls.
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    } else if (videoId && !videoId.startsWith("TODO")) {
       const iframe = document.createElement("iframe");
       iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
       iframe.title = label || "Video player";
@@ -224,6 +246,13 @@ function initLightbox() {
       iframe.allowFullscreen = true;
       iframe.loading = "lazy";
       mount.replaceChildren(iframe);
+    } else {
+      mount.innerHTML = `
+        <div class="lightbox__notice">
+          <p class="lightbox__notice-title">Video coming soon</p>
+          <p>Add a file to this play button&rsquo;s <code>data-video-src</code>,
+             or a YouTube ID to <code>data-video</code>.</p>
+        </div>`;
     }
 
     lightbox.classList.add("is-open");
@@ -249,9 +278,14 @@ function initLightbox() {
     if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
   };
 
-  document.querySelectorAll("[data-video]").forEach((btn) => {
+  document.querySelectorAll("[data-video], [data-video-src]").forEach((btn) => {
     btn.addEventListener("click", () =>
-      open(btn.dataset.video, btn.dataset.videoTitle)
+      open({
+        src: btn.dataset.videoSrc,
+        poster: btn.dataset.videoPoster,
+        videoId: btn.dataset.video,
+        label: btn.dataset.videoTitle,
+      })
     );
   });
 
